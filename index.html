@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Deterministic Password Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .container {
+      margin: 24px;
+      padding: 24px;
+      max-width: 640px;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 16px;
+      box-shadow: 0 18px 45px rgba(0,0,0,0.5);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      backdrop-filter: blur(12px);
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 1.6rem;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      font-size: 0.9rem;
+      color: #9ca3af;
+      margin-bottom: 18px;
+    }
+    label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+      color: #e5e7eb;
+    }
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #4b5563;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    input[type="number"]:focus,
+    textarea:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3);
+      background: #020617;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+      max-height: 160px;
+    }
+    .field {
+      margin-bottom: 14px;
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+    .row .field {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    .hint {
+      font-size: 0.78rem;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+    button {
+      cursor: pointer;
+      border-radius: 999px;
+      border: none;
+      padding: 10px 16px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #38bdf8, #6366f1);
+      color: white;
+      transition: transform 0.08s ease-out, box-shadow 0.08s ease-out, filter 0.08s;
+      box-shadow: 0 10px 25px rgba(56, 189, 248, 0.3);
+    }
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+      box-shadow: 0 12px 30px rgba(56, 189, 248, 0.45);
+    }
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 6px 15px rgba(15, 23, 42, 0.9);
+    }
+    button.secondary {
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid #4b5563;
+      box-shadow: none;
+    }
+    button.secondary:hover {
+      filter: none;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.8);
+    }
+    .output-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .output-group input {
+      font-family: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.8);
+      border: 1px solid rgba(148,163,184,0.5);
+      font-size: 0.72rem;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 6px rgba(34,197,94,0.9);
+    }
+    .status {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-top: 6px;
+      min-height: 1.1em;
+    }
+    .status.ok {
+      color: #4ade80;
+    }
+    .status.error {
+      color: #f97373;
+    }
+    @media (max-width: 600px) {
+      .container {
+        margin: 16px;
+        padding: 18px;
+      }
+      h1 {
+        font-size: 1.3rem;
+      }
+      .row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="badge">
+    <span class="badge-dot"></span>
+    Offline deterministic password generator
+  </div>
+  <h1>HMAC Password Generator</h1>
+  <div class="subtitle">
+    Nhập <b>master key</b> + <b>câu tiếng Anh</b> + <b>tên site</b> → luôn ra cùng một mật khẩu mạnh, chạy hoàn toàn trên trình duyệt.
+  </div>
+
+  <div class="field">
+    <label for="key">Master key (bí mật của bạn)</label>
+    <input type="password" id="key" autocomplete="off" placeholder="Ví dụ: MySuperSecretKey#2025">
+    <div class="hint">Đừng dùng ví dụ này y chang nhé 😄. Bạn chỉ cần nhớ master key + câu + site.</div>
+  </div>
+
+  <div class="field">
+    <label for="message">Câu tiếng Anh / passphrase</label>
+    <textarea id="message" placeholder="Ví dụ: This is my long secret sentence just for generating passwords."></textarea>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label for="site">Site / Service</label>
+      <input type="text" id="site" placeholder="Ví dụ: gmail.com">
+      <div class="hint">Đổi site → password khác, dù cùng key + câu.</div>
+    </div>
+    <div class="field" style="max-width: 130px;">
+      <label for="length">Độ dài</label>
+      <input type="number" id="length" min="8" max="64" value="20">
+      <div class="hint">Khuyên dùng: 16–32 ký tự.</div>
+    </div>
+  </div>
+
+  <div class="field" style="margin-top: 10px;">
+    <button id="generateBtn">
+      🔐 Generate password
+    </button>
+  </div>
+
+  <div class="field">
+    <label for="output">Generated password</label>
+    <div class="output-group">
+      <input type="text" id="output" readonly>
+      <button class="secondary" id="copyBtn">Copy</button>
+    </div>
+    <div id="status" class="status"></div>
+  </div>
+
+  <div class="hint">
+    🔎 Toàn bộ logic chạy trong trình duyệt của bạn, không gửi dữ liệu đi đâu.
+    Nếu bạn host trên GitHub Pages, hãy bảo vệ tài khoản GitHub & luôn dùng HTTPS.
+  </div>
+</div>
+
+<script>
+  // HMAC-SHA256 + Base64 + ép đủ upper/lower/digit/special
+  async function generatePassword(key, message, site, length) {
+    if (!window.crypto || !window.crypto.subtle) {
+      throw new Error("Trình duyệt không hỗ trợ Web Crypto (crypto.subtle).");
+    }
+
+    const encoder = new TextEncoder();
+
+    // Input cho HMAC: message + '|' + site
+    const data = encoder.encode(message + "|" + site);
+    const keyData = encoder.encode(key);
+
+    // Import key cho HMAC-SHA256
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      keyData,
+      { name: "HMAC", hash: { name: "SHA-256" } },
+      false,
+      ["sign"]
+    );
+
+    // Tính HMAC
+    const signature = await crypto.subtle.sign("HMAC", cryptoKey, data);
+    const hmacBytes = new Uint8Array(signature);
+
+    // Convert bytes -> Base64
+    let binary = "";
+    for (let i = 0; i < hmacBytes.length; i++) {
+      binary += String.fromCharCode(hmacBytes[i]);
+    }
+    let base64 = btoa(binary);
+
+    // Map một số ký tự base64 sang ký tự đặc biệt “dễ dùng”
+    base64 = base64
+      .replace(/\+/g, "!")
+      .replace(/\//g, "@")
+      .replace(/=/g, "#");
+
+    // Đảm bảo đủ length bằng cách nhân chuỗi nếu cần
+    let raw = base64;
+    while (raw.length < length) {
+      raw += base64;
+    }
+    raw = raw.slice(0, length);
+
+    const pwdChars = raw.split("");
+
+    // Kiểm tra loại ký tự có sẵn
+    let hasUpper = false;
+    let hasLower = false;
+    let hasDigit = false;
+    let hasSpecial = false;
+
+    for (const c of pwdChars) {
+      if (c >= "A" && c <= "Z") hasUpper = true;
+      else if (c >= "a" && c <= "z") hasLower = true;
+      else if (c >= "0" && c <= "9") hasDigit = true;
+      else hasSpecial = true;
+    }
+
+    const UPPERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const LOWERS = "abcdefghijklmnopqrstuvwxyz";
+    const DIGITS = "0123456789";
+    const SPECIALS = "!@#$%^&*()-_=+";
+
+    const usedIndex = new Array(pwdChars.length).fill(false);
+    let bytePos = 0;
+
+    function nextIndex() {
+      for (let attempt = 0; attempt < pwdChars.length * 2; attempt++) {
+        const b = hmacBytes[bytePos % hmacBytes.length];
+        bytePos++;
+        const idx = b % pwdChars.length;
+        if (!usedIndex[idx]) {
+          usedIndex[idx] = true;
+          return idx;
+        }
+      }
+      return 0; // fallback
+    }
+
+    function nextCharFrom(charset) {
+      const b = hmacBytes[bytePos % hmacBytes.length];
+      bytePos++;
+      return charset[b % charset.length];
+    }
+
+    // Ép đủ 4 loại ký tự nếu thiếu
+    if (!hasUpper) {
+      const idx = nextIndex();
+      pwdChars[idx] = nextCharFrom(UPPERS);
+    }
+    if (!hasLower) {
+      const idx = nextIndex();
+      pwdChars[idx] = nextCharFrom(LOWERS);
+    }
+    if (!hasDigit) {
+      const idx = nextIndex();
+      pwdChars[idx] = nextCharFrom(DIGITS);
+    }
+    if (!hasSpecial) {
+      const idx = nextIndex();
+      pwdChars[idx] = nextCharFrom(SPECIALS);
+    }
+
+    return pwdChars.join("");
+  }
+
+  const keyInput = document.getElementById("key");
+  const messageInput = document.getElementById("message");
+  const siteInput = document.getElementById("site");
+  const lengthInput = document.getElementById("length");
+  const outputInput = document.getElementById("output");
+  const statusDiv = document.getElementById("status");
+  const generateBtn = document.getElementById("generateBtn");
+  const copyBtn = document.getElementById("copyBtn");
+
+  generateBtn.addEventListener("click", async () => {
+    const key = keyInput.value.trim();
+    const message = messageInput.value.trim();
+    const site = siteInput.value.trim() || "default";
+    const length = parseInt(lengthInput.value, 10) || 20;
+
+    statusDiv.textContent = "";
+    statusDiv.className = "status";
+
+    if (!key || !message) {
+      statusDiv.textContent = "Vui lòng nhập cả master key và câu tiếng Anh.";
+      statusDiv.classList.add("error");
+      return;
+    }
+
+    if (length < 8 || length > 64) {
+      statusDiv.textContent = "Độ dài nên trong khoảng 8–64.";
+      statusDiv.classList.add("error");
+      return;
+    }
+
+    try {
+      const pwd = await generatePassword(key, message, site, length);
+      outputInput.value = pwd;
+      statusDiv.textContent = "Đã tạo mật khẩu (cùng key + câu + site → luôn ra kết quả này).";
+      statusDiv.classList.add("ok");
+    } catch (err) {
+      console.error(err);
+      statusDiv.textContent = "Lỗi: " + err.message;
+      statusDiv.classList.add("error");
+    }
+  });
+
+  copyBtn.addEventListener("click", async () => {
+    const pwd = outputInput.value;
+    if (!pwd) return;
+    try {
+      await navigator.clipboard.writeText(pwd);
+      statusDiv.textContent = "Copied to clipboard ✔";
+      statusDiv.className = "status ok";
+    } catch (e) {
+      statusDiv.textContent = "Không copy được vào clipboard (có thể do quyền trình duyệt).";
+      statusDiv.className = "status error";
+    }
+  });
+</script>
+</body>
+</html>
