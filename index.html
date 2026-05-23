@@ -73,6 +73,44 @@
       min-height: 60px;
       max-height: 160px;
     }
+
+    .secret-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .secret-input-wrapper input {
+      padding-right: 46px;
+    }
+    .toggle-secret {
+      position: absolute;
+      right: 8px;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #9ca3af;
+      box-shadow: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      line-height: 1;
+    }
+    .toggle-secret:hover {
+      transform: none;
+      filter: none;
+      background: rgba(148, 163, 184, 0.12);
+      border-color: rgba(148, 163, 184, 0.35);
+      box-shadow: none;
+      color: #e5e7eb;
+    }
+    .toggle-secret:active {
+      transform: none;
+      box-shadow: none;
+    }
     .field {
       margin-bottom: 14px;
     }
@@ -189,13 +227,19 @@
 
   <div class="field">
     <label for="key">Master key (bí mật của bạn)</label>
-    <input type="password" id="key" autocomplete="off" placeholder="Ví dụ: MySuperSecretKey#2025">
+    <div class="secret-input-wrapper">
+      <input type="password" id="key" autocomplete="off" placeholder="Ví dụ: MySuperSecretKey#2025">
+      <button type="button" class="toggle-secret" data-target="key" aria-label="Hiện master key" title="Hiện/ẩn master key">👁️</button>
+    </div>
     <div class="hint">Đừng dùng ví dụ này y chang nhé 😄. Bạn chỉ cần nhớ master key + câu + site.</div>
   </div>
 
   <div class="field">
     <label for="message">Câu tiếng Anh / passphrase</label>
-    <textarea id="message" placeholder="Ví dụ: This is my long secret sentence just for generating passwords."></textarea>
+    <div class="secret-input-wrapper">
+      <input type="password" id="message" autocomplete="off" placeholder="Ví dụ: This is my long secret sentence just for generating passwords.">
+      <button type="button" class="toggle-secret" data-target="message" aria-label="Hiện passphrase" title="Hiện/ẩn passphrase">👁️</button>
+    </div>
   </div>
 
   <div class="row">
@@ -349,6 +393,21 @@
   const statusDiv = document.getElementById("status");
   const generateBtn = document.getElementById("generateBtn");
   const copyBtn = document.getElementById("copyBtn");
+
+  document.querySelectorAll(".toggle-secret").forEach((button) => {
+    button.addEventListener("click", () => {
+      const targetId = button.dataset.target;
+      const input = document.getElementById(targetId);
+      if (!input) return;
+
+      const isHidden = input.type === "password";
+      input.type = isHidden ? "text" : "password";
+
+      button.textContent = isHidden ? "🙈" : "👁️";
+      button.setAttribute("aria-label", isHidden ? `Ẩn ${targetId}` : `Hiện ${targetId}`);
+      button.title = isHidden ? "Ẩn nội dung" : "Hiện nội dung";
+    });
+  });
 
   generateBtn.addEventListener("click", async () => {
     const key = keyInput.value.trim();
